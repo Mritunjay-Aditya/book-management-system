@@ -2,6 +2,40 @@ import tkinter as tk
 from tkinter import messagebox, filedialog
 import json
 
+def merge_sort(data):
+    if len(data) <= 1:
+        return data
+
+    # Split the data into two halves
+    mid = len(data) // 2
+    left_half = data[:mid]
+    right_half = data[mid:]
+
+    # Recursively sort both halves
+    left_half = merge_sort(left_half)
+    right_half = merge_sort(right_half)
+
+    return merge(left_half, right_half)
+
+def merge(left, right):
+    result = []
+    left_idx, right_idx = 0, 0
+
+    while left_idx < len(left) and right_idx < len(right):
+        left_isbn = int(left[left_idx]["ISBN"])
+        right_isbn = int(right[right_idx]["ISBN"])
+
+        if left_isbn < right_isbn:
+            result.append(left[left_idx])
+            left_idx += 1
+        else:
+            result.append(right[right_idx])
+            right_idx += 1
+
+    result.extend(left[left_idx:])
+    result.extend(right[right_idx:])
+    return result
+
 def load_entries_from_file():
     file_path = filedialog.askopenfilename(filetypes=[("JSON Files", "*.json")])
     if file_path:
@@ -23,7 +57,7 @@ def save_entries_to_file():
         messagebox.showinfo("Book Management System", "Entries saved successfully.")
 
 def add_book():
-    global book_list  # Declare book_list as a global variable
+    global book_list
     title = title_entry.get().strip()
     author = author_entry.get().strip()
     year = year_entry.get().strip()
@@ -35,7 +69,6 @@ def add_book():
         author_entry.delete(0, tk.END)
         year_entry.delete(0, tk.END)
         isbn_entry.delete(0, tk.END)
-        # book_list = merge_sort(book_list)  # Sort the book list (you can add sorting later)
         view_library()
         messagebox.showinfo("Book Management System", "Book added successfully.")
     else:
@@ -51,17 +84,19 @@ def delete_book():
         messagebox.showerror("Error", "Invalid index.")
 
 def view_library():
+    global book_list
     library_window = tk.Toplevel(root)
     library_window.title("Current Books")
     library_window.geometry("500x500")
     books_info = tk.Text(library_window)
-    
+
     if not book_list:
         books_info.insert(tk.END, "The library is empty")
     else:
+        book_list = merge_sort(book_list)  # Sort the book list by ISBN
         for index, book in enumerate(book_list, start=1):
             books_info.insert(tk.END, f"{index}. ISBN: {book['ISBN']}\n    Title: {book['Title']}\n    Author: {book['Author']}\n    Year: {book['Year']}\n\n")
-    
+
     books_info.pack()
 
 def exit_library():
